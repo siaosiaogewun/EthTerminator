@@ -1,34 +1,28 @@
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
 import base64
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import unpad
 
-def decrypt_private_key(encrypted_private_key, iv, decryption_key):
-    encrypted_private_key = base64.b64decode(encrypted_private_key)
-    iv = bytes.fromhex(iv)
-
-    cipher = Cipher(algorithms.AES(decryption_key), modes.CFB(iv), backend=default_backend())
-    decryptor = cipher.decryptor()
-
-    decrypted_private_key = decryptor.update(encrypted_private_key) + decryptor.finalize()
-    return decrypted_private_key.decode('utf-8')
-
-def decrypt_encrypted_string(encrypted_string, decryption_key):
-    try:
-        address, iv, encrypted_private_key = encrypted_string.split('-')
-        decrypted_private_key = decrypt_private_key(encrypted_private_key, iv, decryption_key)
-        return f"Address: {address}\nDecrypted Private Key: {decrypted_private_key}"
-    except Exception as e:
-        return f"Error decrypting string: {e}"
-
-# Provide the correct base64-encoded decryption key
 decryption_key_base64 = 'an4dlV9ju1ZM04R_o-2RDwl7fxX-nGZQRHYc5N5OchM='
 decryption_key = base64.b64decode(decryption_key_base64)
 
-# Check if the key size is 32 bytes
-if len(decryption_key) != 32:
-    raise ValueError("Invalid key size. The key should be 32 bytes.")
+def decrypt_data(address, iv, encrypted_data):
+    # Create cipher object and decrypt the text
+    cipher = AES.new(decryption_key, AES.MODE_CBC, iv)
+    decrypted_text = unpad(cipher.decrypt(encrypted_data), AES.block_size)
 
-encrypted_string = "-214cc6fcd28c9e29c0d9dd5d4120c8da-7e669eaad5e2a9d328c92981989cb52ebc3b716b6b9d45971e50b845ec13a5975dc75ac4cc21d3c5792914f3d13b9ff2c59465343d4690d8a1ac8f414d1675ab8aa9d8da890f71dcde8c3d2d4769b539"
-result = decrypt_encrypted_string(encrypted_string, decryption_key)
+    return address, decrypted_text.decode('utf-8')
 
-print(result)
+# Assign values to address, iv, and encrypted_data
+address = "0x4fBC35B68FE36f1510BB40B548BFb67366c0c250"
+iv_base64 = "889b579fbcee2177df04d7da40ccff33"
+encrypted_data_base64 = "0422ce64b90127249aaeefa676efa712e0325cdcfac82833ed23d90329453b09774190accc1ac815e9b7b85e9549f77c6e87da1fb7e2c746e39b46ab8f320ec927cd0c4586304bdb6b4a9c843e234242"
+
+# Decode base64 strings to bytes
+iv = base64.b64decode(iv_base64)
+encrypted_data = base64.b64decode(encrypted_data_base64)
+
+# Decrypt the data
+address, decrypted_text = decrypt_data(address, iv, encrypted_data)
+
+# Print the result
+print(f"Address: {address}\nDecrypted Private Key: {decrypted_text}")
