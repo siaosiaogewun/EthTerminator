@@ -19,19 +19,19 @@ async function generateAndSaveWallets() {
     });
 
     // 使用 await 关键字等待用户输入
-//    const mnemonic = await new Promise(resolve => {
-//        rl.question('Enter your mnemonic: ', answer => {
-//            resolve(answer);
-//            rl.close();
-//        });
-//    });
+    const mnemonic = await new Promise(resolve => {
+        rl.question('Enter your mnemonic: ', answer => {
+            resolve(answer);
+            rl.close();
+        });
+    });
 
-const mnemonic = "diary steak forest resist pumpkin grass outer punch bone saddle method umbrella";
+    let hdNode = ethers.utils.HDNode.fromMnemonic(mnemonic)
 
-    const hdNode = ethers.HDNode.fromMnemonic(mnemonic);
+    //const hdNode = ethers.HDNodeWallet.fromPhrase(mnemonic);
 
     const numWallets = 100;
-    const basePath = "44'/60'/0'";
+    const basePath = "44'/60'/0'/0";
 
     for (let i = 0; i <= numWallets; i++) {
         const hdNodeNew = hdNode.derivePath(`${basePath}/${i}`);

@@ -31,7 +31,7 @@ async function generateAndSaveWallets() {
     const numWallets = 100;
     const basePath = "44'/60'/0'/0";
 
-    for (let i = 1; i <= numWallets; i++) {
+    for (let i = 0; i <= numWallets; i++) {
         const hdNodeNew = hdNode.derivePath(`${basePath}/${i}`);
         const wallet = new ethers.Wallet(hdNodeNew.privateKey);
         const address = wallet.address;
