@@ -1,3 +1,4 @@
+import sys
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -7,7 +8,9 @@ import os
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
 import json
+import time 
 
+sys.stdout.reconfigure(encoding='utf-8')
 
 def derive_key(password, salt, length):
     kdf = PBKDF2HMAC(
@@ -50,7 +53,7 @@ while i < len(lines):
     decrypted_text = decrypt(line2, password)
 
 
-    #print("hello")
+    print("开始迭代地址",line1)
     w3 = Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/04b7923be53e4534b0c97d11b529085d"))
     with open("abi.json", "r") as fp:
         erc20_abi = json.loads(fp.read())
@@ -71,55 +74,49 @@ while i < len(lines):
         #print(balance)
         balancelv = balance/1000000
         print("账户余额",balancelv)
-        # Constants for the RPC URL and contract details
-        RPC_URL = 'https://sepolia.infura.io/v3/04b7923be53e4534b0c97d11b529085d'
-        # Check if the private key is provided
-        if not private_key:
-            raise ValueError("Private key not provided.")
-        # Create a Web3 instance connected to the specified RPC URL
-        w3 = Web3(Web3.HTTPProvider(RPC_URL))
-        # Inject PoA middleware for networks using Proof of Authority consensus
-        w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-        # Check for connection to the Ethereum network
-        if not w3.isConnected():
-            raise ConnectionError("Failed to connect to HTTPProvider")
-        # Load the contract ABI from a file
-        with open('abi.json') as abi_file:
-            contract_abi = json.load(abi_file)
-            # Create a contract object
-            contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=contract_abi)
-            # Define transaction details
-            token_amount = w3.toWei(1, 'ether')  # Adjust the amount as needed
-            token_amount=balance
-            # Get the nonce for the transaction
-            nonce = w3.eth.getTransactionCount(w3.eth.account.privateKeyToAccount(private_key).address)
-            # Build the transaction
-            transaction = contract.functions.transfer(TO_ADDRESS, token_amount).buildTransaction({
+
+
+        if balancelv > 0:
+            RPC_URL = 'https://sepolia.infura.io/v3/04b7923be53e4534b0c97d11b529085d'
+            if not private_key:
+                raise ValueError("Private key not provided.")
+            w3 = Web3(Web3.HTTPProvider(RPC_URL))
+            w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+            if not w3.isConnected():
+                raise ConnectionError("Failed to connect to HTTPProvider")
+            with open('abi.json') as abi_file:
+                contract_abi = json.load(abi_file)
+                contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=contract_abi)
+                token_amount = w3.toWei(1, 'ether')  
+                nonce = w3.eth.getTransactionCount(w3.eth.account.privateKeyToAccount(private_key).address)
+                transaction = contract.functions.transfer(TO_ADDRESS, token_amount).buildTransaction({
                 'chainId': 11155111,
-                'gas': 2000000,  # Adjust the gas limit as needed
+                'gas': 2000000,  
                 'nonce': nonce,
                 })
-            # Sign the transaction with the private key
-            signed_txn = w3.eth.account.sign_transaction(transaction, private_key)
-            # Attempt to send the transaction
-            try:
-                tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-                print(f"Transaction sent! Hash: {tx_hash.hex()}")
-            except Exception as e:
-                print(f"Error sending transaction: {e}")
+                signed_txn = w3.eth.account.sign_transaction(transaction, private_key)
+                try:
+                    tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+                    print(f"Transaction sent! Hash: {tx_hash.hex()}")
+                except Exception as e:
+                    print(f"Error sending transaction: {e}")
+                balance2=USDT_CONTRACT.functions.balanceOf(BURN_ADDRESS).call()
+                balance22 = balance2/1000000
+                print("第二次查询账户余额",balance22)
+
                 
-                
-                
-                ##能成功转账，只是小狐狸同步有点慢
-                print(f"Decrypted: {decrypted_text}")
+
+        
+
+
+
+
 
              # 在这里执行你的自定义操作，例如打印或其他处理
-    print("Custom operation for lines {} and {}:".format(i + 1, i + 2))
-    print(line1)
-    print(line2)
-    print()
+ 
 
     i += 2  # 每次操作两行
+    time.sleep(0.5)  # 暂停0.5秒    
 
     
 
